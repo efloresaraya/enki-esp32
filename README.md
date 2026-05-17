@@ -97,7 +97,36 @@ The board presets include an `ESP32-P4 Nano · 32MB PSRAM · 16MB Flash` profile
 
 Project recognition is intentionally folder-based and portable. An Enki project is any folder with a valid `app_config.json`. A normal ESP-IDF folder with `CMakeLists.txt` and `main/` can be loaded from the UI and adopted by creating that `app_config.json`, so copied folders do not depend on hidden VS Code workspace state.
 
-## ESP32-P4 Camera Example
+## OV5647 UVC Webcam (ESP32-P4 Nano)
+
+The `ov5647_uvc_webcam/` project turns an **ESP32-P4 Nano + OV5647** camera module into a plug-and-play USB UVC webcam — no drivers needed on macOS, Linux or Windows.
+
+**Hardware**: ESP32-P4 Nano · OV5647 MIPI CSI-2 · USB-A OTG HS port  
+**Output**: 640×480 MJPEG @ 15 fps over USB UVC (isochronous)  
+**Sensor mode**: RAW10 1280×960 2:1 binning — covers ~99 % of the full 2592×1944 sensor area for maximum field of view  
+**Pipeline**: MIPI RAW10 → ISP (Bayer GBRG demosaic + CCM + γ0.55) → RGB565 → 2× CPU downscale → HW JPEG encoder → TinyUSB UVC  
+
+```bash
+cd ov5647_uvc_webcam
+idf.py build
+idf.py -p /dev/cu.usbmodem* flash
+python3 view_webcam.py          # live preview (OpenCV)
+```
+
+The device appears as **"OV5647 UVC Webcam"** (VID 0x303A / PID 0x8000) in any UVC-compatible application (QuickTime, OBS, Zoom, etc.).
+
+Key ESP32-P4 v1.3 quirks documented and worked around:
+- TinyUSB PR #1820 `wLength` fix for macOS UVC probe/commit
+- ISP demosaic must be explicitly enabled after `esp_isp_enable()`
+- DMA `received_size` reported in MIPI input bytes, not RGB565 bytes
+- ISOC transfer required (BULK causes AVFoundation C++ exception on macOS)
+- Ping-pong DMA buffers prevent frame tearing during CPU downscale
+
+See [`ov5647_uvc_webcam/sdkconfig.defaults`](ov5647_uvc_webcam/sdkconfig.defaults) for all Kconfig settings.
+
+---
+
+## ESP32-P4 Camera Serial Example
 
 The `examples/ov5647_color_stream/` project targets **ESP32-P4 Nano** with an OV5647 MIPI CSI-2 camera. It captures RAW8 at 800×1280, runs the full ISP pipeline on-chip (Bayer demosaic → CCM → gamma), downsamples to 200×320 and streams color JPEG frames over USB JTAG serial at ~2 fps.
 
