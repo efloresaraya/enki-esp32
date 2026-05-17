@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "enki-esp"
+version = "0.1.0"
+description = "Minimal, reproducible, agent-friendly ESP32 environment on top of ESP-IDF."
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [{ name = "Enki ESP Environment" }]
+dependencies = [
+    "typer>=0.12",
+    "rich>=13.7",
+    "pydantic>=2.6",
+    "pyserial>=3.5",
+    "jinja2>=3.1",
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.27",
+]
+
+[project.scripts]
+enki = "enki.cli:app"
+
+[tool.setuptools.packages.find]
+include = ["enki*"]
+
+[tool.setuptools.package-data]
+enki = ["templates/**/*", "ui_static/**/*"]

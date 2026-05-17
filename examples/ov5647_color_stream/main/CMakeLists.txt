@@ -1,0 +1,3 @@
+idf_component_register(SRCS "main.c"
+                       INCLUDE_DIRS "."
+                       REQUIRES esp_hw_support esp_driver_cam sensor_init esp_driver_jpeg esp_driver_isp esp_sccb_intf esp_driver_usb_serial_jtag esp_driver_uart vfs esp_timer)

@@ -1,0 +1,49 @@
+# Python
+.venv/
+.venv*/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.pycache_tmp/
+
+# ESP-IDF (installed separately, not tracked)
+esp-idf/
+
+# Build artifacts
+build/
+**/build/
+**/managed_components/
+**/dependencies.lock
+**/sdkconfig
+**/sdkconfig.old
+**/sdkconfig.before_eth_disable
+
+# Enki local state
+.enki/logs/
+.enki/ui_projects.json
+**/.enki/logs/
+**/.enki/ui_projects.json
+
+# Development project directories (not part of the public repo)
+/blink/
+/camera_sensor_stack_probe/
+/camera_sensor_stack_probe_RGB/
+/camera_probe_imx219_demo/
+
+# Development / debug scripts
+capture_frame.py
+check_eoi.py
+check_jpeg.py
+captured_frame*.jpg
+
+# Editor / OS
+.DS_Store
+**/.DS_Store
+**/.cache/
+
+# Claude Code internal settings
+.claude/
+
+# Internal agent docs
+agent_commands.md

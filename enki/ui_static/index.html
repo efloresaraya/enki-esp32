@@ -1,0 +1,1514 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Enki ESP UI</title>
+<style>
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  height: 100vh;
+  overflow: hidden;
+  color: #d4d4d4;
+  background: #1e1e1e;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+button, select, input {
+  font: inherit;
+}
+#toolbar {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: #2d2d2d;
+  border-bottom: 1px solid #3c3c3c;
+}
+#toolbar button, #toolbar select {
+  height: 28px;
+  border: 1px solid #555;
+  border-radius: 4px;
+  background: #3c3c3c;
+  color: #ddd;
+  padding: 0 10px;
+  cursor: pointer;
+}
+#toolbar button:hover { background: #505050; }
+#toolbar button.primary { background: #0e639c; border-color: #0e639c; color: #fff; font-weight: 650; }
+#toolbar button.primary:hover { background: #1177bb; }
+#toolbar button:disabled { opacity: .55; cursor: default; }
+#toolbar label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #aaa;
+  font-size: 12px;
+}
+.sep { width: 1px; height: 22px; background: #4a4a4a; }
+#main {
+  height: calc(100vh - 62px);
+  display: flex;
+  min-height: 0;
+}
+#workarea {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+#content-row {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+#sidebar {
+  width: 245px;
+  min-width: 160px;
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  background: #252526;
+  border-right: 1px solid #3c3c3c;
+}
+#sidebar-header {
+  height: 32px;
+  padding: 8px 10px;
+  border-bottom: 1px solid #3c3c3c;
+  color: #888;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+}
+#project-tools {
+  padding: 8px;
+  border-bottom: 1px solid #3c3c3c;
+  background: #232323;
+}
+#project-tools input {
+  width: 100%;
+  min-width: 0;
+  height: 26px;
+  margin-bottom: 6px;
+  border: 1px solid #555;
+  border-radius: 4px;
+  background: #303030;
+  color: #ddd;
+  padding: 0 8px;
+  font-size: 12px;
+}
+#project-tools .row {
+  display: flex;
+  gap: 6px;
+}
+#project-tools button {
+  height: 26px;
+  border: 1px solid #555;
+  border-radius: 4px;
+  background: #3c3c3c;
+  color: #ddd;
+  padding: 0 8px;
+  cursor: pointer;
+  font-size: 12px;
+}
+#project-tools button.primary {
+  background: #0e639c;
+  border-color: #0e639c;
+  color: #fff;
+}
+#project-results {
+  max-height: 170px;
+  overflow: auto;
+  margin-top: 7px;
+  border-top: 1px solid #333;
+}
+.project-result {
+  padding: 7px 0;
+  border-bottom: 1px solid #303030;
+  font-size: 12px;
+}
+.project-result b {
+  display: block;
+  color: #e2e2e2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.project-result small {
+  display: block;
+  margin: 2px 0 6px;
+  color: #909090;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.project-result .badge {
+  color: #f1d889;
+}
+#file-list {
+  flex: 1;
+  overflow: auto;
+  padding: 4px 0;
+}
+.item {
+  min-height: 25px;
+  padding: 5px 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.item:hover { background: #2a2d2e; }
+.item.active { background: #094771; color: #fff; }
+.item-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dir-arrow {
+  width: 10px;
+  font-size: 10px;
+  color: #888;
+}
+.children { display: none; }
+.children.open { display: block; }
+#editor-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 240px;
+  min-height: 0;
+}
+#tabs {
+  height: 32px;
+  display: flex;
+  align-items: center;
+  background: #2d2d2d;
+  border-bottom: 1px solid #3c3c3c;
+}
+#tab {
+  height: 32px;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  color: #fff;
+  background: #1e1e1e;
+  border-right: 1px solid #3c3c3c;
+  border-bottom: 2px solid #0e639c;
+  font-size: 12px;
+}
+#monaco { flex: 1; min-height: 0; }
+#right-panel {
+  display: flex;
+  flex-direction: row;
+  background: #202020;
+  border-left: 1px solid #3c3c3c;
+}
+#right-panel-content {
+  width: 360px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: width 0.15s ease;
+}
+#right-panel-content.collapsed { width: 0; }
+.rtab-pane {
+  display: none;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+.rtab-pane.active { display: flex; }
+#tab-pane-estado { overflow-y: auto; }
+#tab-pane-camara { overflow: hidden; }
+#right-tab-strip {
+  width: 36px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  background: #2d2d2d;
+  border-left: 1px solid #3c3c3c;
+}
+.rtab-btn {
+  width: 36px;
+  padding: 18px 0;
+  border: none;
+  border-bottom: 1px solid #3c3c3c;
+  background: none;
+  color: #888;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  transition: background 0.1s;
+}
+.rtab-btn:hover:not(.active) { background: #3a3a3a; color: #ccc; }
+.rtab-btn.active {
+  color: #fff;
+  background: #202020;
+  border-left: 2px solid #0e639c;
+}
+#panel-header {
+  height: 32px;
+  flex-shrink: 0;
+  padding: 8px 10px;
+  border-bottom: 1px solid #3c3c3c;
+  color: #888;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+}
+#status-card {
+  padding: 10px;
+  border-bottom: 1px solid #333;
+  font-size: 12px;
+  line-height: 1.55;
+  color: #bdbdbd;
+}
+#settings-card {
+  padding: 10px;
+  border-bottom: 1px solid #333;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  font-size: 12px;
+}
+#settings-card label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: #9c9c9c;
+}
+#settings-card label.wide { grid-column: 1 / -1; }
+#settings-card select, #settings-card input {
+  width: 100%;
+  min-width: 0;
+  height: 28px;
+  border: 1px solid #555;
+  border-radius: 4px;
+  background: #303030;
+  color: #ddd;
+  padding: 0 8px;
+}
+#settings-card .check-row {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #ddd;
+}
+#settings-card .check-row input { width: auto; height: auto; }
+#settings-card .actions {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 8px;
+}
+#settings-card button {
+  height: 28px;
+  border: 1px solid #555;
+  border-radius: 4px;
+  background: #3c3c3c;
+  color: #ddd;
+  padding: 0 10px;
+  cursor: pointer;
+}
+#settings-card button.primary { background: #0e639c; border-color: #0e639c; color: #fff; }
+#profile-note {
+  grid-column: 1 / -1;
+  color: #8a8a8a;
+  line-height: 1.35;
+}
+#features-card {
+  padding: 10px;
+  border-bottom: 1px solid #333;
+  display: grid;
+  gap: 7px;
+  font-size: 12px;
+}
+#features-card h3 {
+  margin: 0 0 2px;
+  color: #bdbdbd;
+  font-size: 12px;
+  font-weight: 700;
+}
+.feature-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: start;
+  gap: 8px;
+  padding: 6px 0;
+  border-top: 1px solid #303030;
+}
+.feature-row:first-of-type { border-top: 0; }
+.feature-row input { margin-top: 2px; }
+.feature-row b {
+  display: block;
+  color: #ddd;
+  font-weight: 600;
+}
+.feature-row small {
+  display: block;
+  margin-top: 2px;
+  color: #8f8f8f;
+  line-height: 1.3;
+}
+.feature-chip {
+  padding: 1px 5px;
+  border: 1px solid #555;
+  border-radius: 3px;
+  color: #bdbdbd;
+  font-size: 10px;
+  white-space: nowrap;
+}
+.feature-chip.external { color: #f1d889; border-color: #806a2a; }
+.feature-chip.unsupported { color: #f48771; border-color: #7a3a2f; }
+#log {
+  min-height: 150px;
+  max-height: 380px;
+  overflow: auto;
+  padding: 10px;
+  white-space: pre-wrap;
+  font: 12px/1.45 Menlo, Monaco, Consolas, monospace;
+  color: #b8b8b8;
+  background: #171717;
+}
+#terminal-card {
+  flex: 0 0 230px;
+  min-height: 150px;
+  display: flex;
+  flex-direction: column;
+  background: #101010;
+  border-top: 1px solid #3c3c3c;
+}
+#terminal-header {
+  height: 32px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  color: #9c9c9c;
+  border-bottom: 1px solid #333;
+  font-size: 12px;
+}
+#terminal-header button, #terminal-input-row button {
+  height: 24px;
+  border: 1px solid #555;
+  border-radius: 4px;
+  background: #3c3c3c;
+  color: #ddd;
+  padding: 0 8px;
+  cursor: pointer;
+}
+#terminal-header button.primary { background: #0e639c; border-color: #0e639c; color: #fff; }
+#terminal-header button.help { border-color: #806a2a; color: #f1d889; }
+#terminal-output {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 10px;
+  white-space: pre-wrap;
+  font: 12px/1.45 Menlo, Monaco, Consolas, monospace;
+  color: #d0d0d0;
+  background: #090909;
+}
+#terminal-input-row {
+  display: flex;
+  gap: 8px;
+  padding: 8px 10px;
+  border-top: 1px solid #333;
+}
+#terminal-input {
+  flex: 1;
+  min-width: 0;
+  height: 28px;
+  border: 1px solid #555;
+  border-radius: 4px;
+  background: #252525;
+  color: #eee;
+  padding: 0 8px;
+  font-family: Menlo, Monaco, Consolas, monospace;
+}
+#terminal-input-row button { height: 28px; padding: 0 10px; }
+#terminal-help {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+  background: rgba(0, 0, 0, .55);
+}
+#terminal-help.open { display: flex; }
+#terminal-help-card {
+  width: min(620px, calc(100vw - 32px));
+  max-height: calc(100vh - 56px);
+  overflow: auto;
+  padding: 18px;
+  border: 1px solid #505050;
+  border-radius: 6px;
+  background: #1f1f1f;
+  box-shadow: 0 18px 60px rgba(0, 0, 0, .45);
+}
+#terminal-help-card h2 {
+  margin: 0 0 12px;
+  font-size: 17px;
+  color: #fff;
+}
+#terminal-help-card ul {
+  margin: 0;
+  padding-left: 20px;
+  color: #d0d0d0;
+  font-size: 13px;
+  line-height: 1.55;
+}
+#terminal-help-card code {
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: #303030;
+  color: #f1d889;
+}
+#terminal-help-card .actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+#terminal-help-card button {
+  height: 28px;
+  border: 1px solid #555;
+  border-radius: 4px;
+  background: #3c3c3c;
+  color: #ddd;
+  padding: 0 10px;
+  cursor: pointer;
+}
+#statusbar {
+  height: 22px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 12px;
+  background: #007acc;
+  color: #fff;
+  font-size: 12px;
+}
+#statusbar.warn { background: #875f00; }
+#statusbar.err { background: #b43838; }
+#statusbar.ok { background: #007acc; }
+.grow { flex: 1; }
+.muted { color: #8a8a8a; }
+.ok-text { color: #65d46e; }
+.err-text { color: #f48771; }
+#camera-card {
+  background: #1a1a1a;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+#camera-header {
+  height: 36px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  color: #9c9c9c;
+  font-size: 12px;
+  border-bottom: 1px solid #333;
+}
+#camera-header b { color: #ccc; }
+#camera-header button {
+  height: 22px;
+  border: 1px solid #555;
+  border-radius: 4px;
+  background: #3c3c3c;
+  color: #ddd;
+  padding: 0 8px;
+  cursor: pointer;
+  font-size: 11px;
+}
+#camera-header button.primary { background: #0e639c; border-color: #0e639c; color: #fff; }
+#camera-body {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+  min-height: 0;
+  overflow: hidden;
+}
+#camera-waiting {
+  color: #444;
+  font-size: 13px;
+  font-family: Menlo, Monaco, monospace;
+  letter-spacing: 0.03em;
+}
+#camera-canvas {
+  width: 100%;
+  height: auto;
+  max-height: 100%;
+  display: block;
+  image-rendering: auto;
+}
+#camera-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 4px 10px;
+  background: linear-gradient(transparent, rgba(0,0,0,0.72));
+  font: 11px/1.5 Menlo, Monaco, Consolas, monospace;
+  color: #3fba6e;
+  display: none;
+  pointer-events: none;
+  white-space: nowrap;
+  overflow: hidden;
+}
+#camera-overlay.visible { display: block; }
+#camera-stats {
+  width: 100%;
+  padding: 2px 8px;
+  font: 11px/1.4 Menlo, Monaco, Consolas, monospace;
+  color: #555;
+  flex-shrink: 0;
+  background: #0d0d0d;
+}
+/* stream-mode: expand right panel while camera is active */
+body.stream-mode #right-panel-content { width: 520px !important; }
+</style>
+</head>
+<body>
+<div id="toolbar">
+  <select id="project-select" title="Proyecto"></select>
+  <button onclick="refreshAll()">Refrescar</button>
+  <div class="sep"></div>
+  <button class="primary" onclick="saveNow()">Guardar</button>
+  <button onclick="saveAs()">Guardar como</button>
+  <label><input type="checkbox" id="autosave"> Autoguardado</label>
+  <div class="sep"></div>
+  <button onclick="runCommand('build')" id="build-btn">Build</button>
+  <button onclick="runCommand('flash')" id="flash-btn">Flash</button>
+  <button onclick="runCommand('clean')" id="clean-btn">Clean</button>
+  <button onclick="loadDoctor()">Doctor</button>
+  <button onclick="loadBoards()">Boards</button>
+  <div class="grow"></div>
+  <span class="muted" id="workspace-label"></span>
+</div>
+
+<div id="main">
+  <aside id="sidebar">
+    <div id="sidebar-header">Archivos</div>
+    <div id="project-tools">
+      <input id="project-path-input" placeholder="/Users/emilioylore/mi_proyecto">
+      <input id="project-query-input" placeholder="Buscar proyecto local">
+      <div class="row">
+        <button class="primary" onclick="loadProjectFromPath()">Cargar carpeta</button>
+        <button onclick="searchProjects()">Buscar</button>
+      </div>
+      <div id="project-results"></div>
+    </div>
+    <div id="file-list"></div>
+  </aside>
+
+  <section id="workarea">
+    <div id="content-row">
+      <section id="editor-wrap">
+        <div id="tabs"><div id="tab">Sin archivo</div></div>
+        <div id="monaco"></div>
+      </section>
+
+      <aside id="right-panel">
+        <div id="right-panel-content">
+          <div id="tab-pane-estado" class="rtab-pane active">
+            <div id="panel-header">Estado</div>
+            <div id="settings-card">
+              <label class="wide">Perfil de placa
+                <select id="set-board-profile" onchange="applySelectedProfile()"></select>
+              </label>
+              <label>Target
+                <select id="set-target"></select>
+              </label>
+              <label>Puerto
+                <select id="set-port"></select>
+              </label>
+              <label>Flash
+                <select id="set-flash-size"></select>
+              </label>
+              <label>Particiones
+                <select id="set-partition"></select>
+              </label>
+              <label>Log
+                <select id="set-log-level"></select>
+              </label>
+              <label>Baudrate
+                <input id="set-baudrate" type="number" min="9600" step="1">
+              </label>
+              <label class="check-row">
+                <input id="set-psram" type="checkbox"> Activar PSRAM / RAM externa
+              </label>
+              <div id="profile-note"></div>
+              <div class="actions">
+                <button class="primary" onclick="saveSettings()">Aplicar configuración</button>
+                <button onclick="loadBoards()">Detectar puertos</button>
+              </div>
+            </div>
+            <div id="features-card">
+              <h3>Capacidades de placa</h3>
+              <div id="features-list"></div>
+            </div>
+            <div id="status-card">Cargando...</div>
+            <div id="log"></div>
+          </div>
+          <div id="tab-pane-camara" class="rtab-pane">
+            <div id="camera-card">
+              <div id="camera-header">
+                <b>Cámara MIPI</b>
+                <span id="camera-state" style="color:#555;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:130px">desconectado</span>
+                <span class="grow"></span>
+                <button class="primary" id="cam-btn" onclick="toggleCamera()">Conectar</button>
+                <button onclick="clearCameraView()">✕</button>
+              </div>
+              <div id="camera-body">
+                <div id="camera-waiting">esperando frame...</div>
+                <canvas id="camera-canvas" style="display:none"></canvas>
+                <div id="camera-overlay"></div>
+              </div>
+              <div id="camera-stats"></div>
+            </div>
+          </div>
+        </div>
+        <div id="right-tab-strip">
+          <button class="rtab-btn active" data-tab="tab-pane-estado" onclick="switchRightTab('tab-pane-estado')">Estado</button>
+          <button class="rtab-btn" data-tab="tab-pane-camara" onclick="switchRightTab('tab-pane-camara')">Cámara</button>
+        </div>
+      </aside>
+    </div>
+
+    <div id="terminal-card">
+      <div id="terminal-header">
+        <b>Serial</b>
+        <span id="terminal-state">desconectado</span>
+        <span class="grow"></span>
+        <button class="primary" onclick="connectTerminal()">Conectar</button>
+        <button onclick="disconnectTerminal()">Desconectar</button>
+        <button onclick="clearTerminal()">Limpiar</button>
+        <button class="help" onclick="showTerminalHelp()">Help</button>
+      </div>
+      <div id="terminal-output"></div>
+      <div id="terminal-input-row">
+        <input id="terminal-input" placeholder='Escribe JSON Lines, texto serial o /help' onkeydown="if(event.key==='Enter')sendTerminal()">
+        <button onclick="sendTerminal()">Enviar</button>
+      </div>
+    </div>
+
+  </section>
+</div>
+
+<div id="terminal-help" onclick="if(event.target===this)hideTerminalHelp()">
+  <div id="terminal-help-card">
+    <h2>Terminal serial</h2>
+    <ul>
+      <li><b>Conectar</b> abre el puerto seleccionado con el baudrate configurado.</li>
+      <li>Si el puerto está en <code>auto</code>, Enki elige el puerto USB serial recomendado.</li>
+      <li><b>Enviar</b> manda la línea escrita al ESP32 y agrega salto de línea automáticamente.</li>
+      <li>Puedes enviar texto plano o JSON Lines, por ejemplo <code>{"cmd":"ping"}</code>.</li>
+      <li><code>/help</code> imprime esta ayuda dentro de la terminal sin enviar nada a la placa.</li>
+      <li><b>Limpiar</b> borra la vista local de la terminal; no reinicia la placa.</li>
+      <li><code>Cmd+L</code> o <code>Ctrl+L</code> limpia la terminal cuando el cursor está en la entrada.</li>
+      <li>Los botones Build, Flash y Clean están arriba; esta terminal solo muestra y envía serial.</li>
+    </ul>
+    <div class="actions"><button onclick="hideTerminalHelp()">Cerrar</button></div>
+  </div>
+</div>
+
+<div id="statusbar" class="ok">
+  <span id="status">Listo</span>
+  <span class="grow"></span>
+  <span id="save-state">Sin cambios</span>
+</div>
+
+<script src="https://unpkg.com/monaco-editor@0.44.0/min/vs/loader.js"></script>
+<script>
+"use strict";
+
+let editor = null;
+let projects = [];
+let currentProject = "";
+let currentFile = "";
+let saveTimer = null;
+let dirty = false;
+let suppressChange = false;
+let boardMeta = null;
+let currentSettings = null;
+let terminalWs = null;
+
+const TERMINAL_HELP_TEXT = [
+  "Terminal serial Enki",
+  "- Conectar abre el puerto seleccionado con el baudrate configurado.",
+  "- Con puerto auto, Enki elige el USB serial recomendado.",
+  "- Enviar manda la linea escrita y agrega salto de linea.",
+  "- Puedes enviar texto plano o JSON Lines, por ejemplo {\"cmd\":\"ping\"}.",
+  "- /help imprime esta ayuda sin enviar nada a la placa.",
+  "- Limpiar, Cmd+L o Ctrl+L borran solo la vista local.",
+  "- Build, Flash y Clean se ejecutan desde la barra superior.",
+].join("\n");
+
+const TEXT_LANG = {
+  ".c": "c",
+  ".h": "c",
+  ".cpp": "cpp",
+  ".hpp": "cpp",
+  ".json": "json",
+  ".py": "python",
+  ".md": "markdown",
+  ".m": "matlab",
+};
+
+require.config({ paths: { vs: "https://unpkg.com/monaco-editor@0.44.0/min/vs" } });
+require(["vs/editor/editor.main"], () => {
+  monaco.editor.defineTheme("enki-dark", {
+    base: "vs-dark",
+    inherit: true,
+    rules: [],
+    colors: { "editor.background": "#1e1e1e" }
+  });
+  editor = monaco.editor.create(document.getElementById("monaco"), {
+    value: "",
+    language: "c",
+    theme: "enki-dark",
+    fontSize: 14,
+    minimap: { enabled: false },
+    automaticLayout: true,
+    scrollBeyondLastLine: false,
+    tabSize: 4,
+    insertSpaces: true,
+    wordWrap: "on",
+    renderWhitespace: "boundary",
+    bracketPairColorization: { enabled: true },
+  });
+  editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => saveNow());
+  editor.onDidChangeModelContent(() => {
+    if (suppressChange) return;
+    dirty = true;
+    setSaveState("Cambios sin guardar");
+    if (document.getElementById("autosave").checked) {
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(() => saveNow(true), 900);
+    }
+  });
+  init();
+});
+
+async function init() {
+  document.getElementById("autosave").checked = localStorage.getItem("enkiAutosave") !== "false";
+  document.getElementById("autosave").addEventListener("change", e => {
+    localStorage.setItem("enkiAutosave", e.target.checked ? "true" : "false");
+  });
+  document.addEventListener("keydown", event => {
+    const active = document.activeElement;
+    if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "l" && active?.id === "terminal-input") {
+      event.preventDefault();
+      clearTerminal();
+    }
+    if (event.key === "Escape") hideTerminalHelp();
+  });
+  await loadWorkspace();
+  await loadBoardProfiles();
+  await loadBoards(true);
+  await loadProjects();
+}
+
+async function api(path, method = "GET", body = null) {
+  const options = { method, headers: {} };
+  if (body !== null) {
+    options.headers["Content-Type"] = "application/json";
+    options.body = JSON.stringify(body);
+  }
+  const response = await fetch(path, options);
+  if (!response.ok) throw new Error(await response.text());
+  return response.json();
+}
+
+function ext(path) {
+  const i = path.lastIndexOf(".");
+  return i >= 0 ? path.slice(i).toLowerCase() : "";
+}
+
+function languageFor(path) {
+  if (path.endsWith("CMakeLists.txt") || ext(path) === ".cmake") return "cmake";
+  return TEXT_LANG[ext(path)] || "plaintext";
+}
+
+async function loadWorkspace() {
+  const info = await api("/api/workspace");
+  document.getElementById("workspace-label").textContent = info.root;
+  document.getElementById("project-path-input").placeholder = `${info.home}/mi_proyecto_esp32`;
+}
+
+async function loadProjects() {
+  projects = await api("/api/projects");
+  const select = document.getElementById("project-select");
+  select.innerHTML = "";
+  for (const project of projects) {
+    const option = document.createElement("option");
+    option.value = project.path;
+    option.textContent = `${project.name} (${project.target || "?"})`;
+    select.appendChild(option);
+  }
+  const last = localStorage.getItem("enkiUiProject");
+  currentProject = projects.some(p => p.path === last) ? last : (projects[0]?.path || "");
+  select.value = currentProject;
+  select.onchange = () => openProject(select.value);
+  if (currentProject) await openProject(currentProject);
+  else {
+    setStatus("No hay proyectos Enki cargados", "warn");
+    document.getElementById("file-list").innerHTML = "";
+    document.getElementById("status-card").textContent = "Crea uno con enki new <nombre> o carga una carpeta ESP-IDF desde el buscador.";
+  }
+}
+
+async function loadBoardProfiles() {
+  boardMeta = await api("/api/board-profiles");
+  fillSelect("set-target", boardMeta.targets.map(value => ({ value, label: value })));
+  fillSelect("set-flash-size", boardMeta.flash_sizes.map(value => ({ value, label: value })));
+  fillSelect("set-partition", boardMeta.partition_schemes.map(item => ({ value: item.id, label: item.name })));
+  fillSelect("set-log-level", boardMeta.log_levels.map(value => ({ value, label: value })));
+  fillSelect("set-board-profile", boardMeta.profiles.map(item => ({ value: item.id, label: item.name })));
+}
+
+function fillSelect(id, items) {
+  const el = document.getElementById(id);
+  el.innerHTML = "";
+  for (const item of items) {
+    const option = document.createElement("option");
+    option.value = item.value;
+    option.textContent = item.label;
+    el.appendChild(option);
+  }
+}
+
+async function openProject(path) {
+  if (dirty) await saveNow(true);
+  currentProject = path;
+  currentFile = "";
+  localStorage.setItem("enkiUiProject", currentProject);
+  await loadStatus();
+  await refreshTree();
+  const project = projects.find(p => p.path === currentProject);
+  if (project?.entry) openFile(project.entry);
+}
+
+function projectApi(path, suffix = "") {
+  return `/api/projects/${encodeURIComponent(path)}${suffix}`;
+}
+
+async function loadProjectFromPath(path = null, adopt = false) {
+  const raw = path || document.getElementById("project-path-input").value.trim();
+  if (!raw) {
+    setStatus("Indica una carpeta local", "warn");
+    return;
+  }
+  try {
+    const result = await api("/api/projects/load", "POST", { path: raw, adopt });
+    if (result.needs_adoption) {
+      const ok = confirm("Esta carpeta parece un proyecto ESP-IDF, pero no tiene app_config.json. ¿Quieres que Enki la adopte y cree app_config.json?");
+      if (ok) return loadProjectFromPath(raw, true);
+      document.getElementById("log").textContent = JSON.stringify(result, null, 2);
+      setStatus("Proyecto ESP-IDF detectado, pendiente de adopción", "warn");
+      return;
+    }
+    await loadProjects();
+    const loadedPath = result.project?.path;
+    if (loadedPath) await openProject(loadedPath);
+    setStatus(result.adopted ? "Proyecto adoptado por Enki" : "Proyecto cargado", "ok");
+  } catch (error) {
+    document.getElementById("log").textContent = error.message;
+    setStatus("No se pudo cargar la carpeta", "err");
+  }
+}
+
+async function searchProjects() {
+  const base = document.getElementById("project-path-input").value.trim();
+  const query = document.getElementById("project-query-input").value.trim();
+  const params = new URLSearchParams({ depth: "4" });
+  if (base) params.set("base", base);
+  if (query) params.set("q", query);
+  const results = document.getElementById("project-results");
+  results.textContent = "Buscando...";
+  try {
+    const data = await api(`/api/projects/discover?${params.toString()}`);
+    renderProjectResults(data.projects);
+    setStatus(`${data.projects.length} proyectos encontrados`, "ok");
+  } catch (error) {
+    results.textContent = "";
+    document.getElementById("log").textContent = error.message;
+    setStatus("No se pudo buscar en esa carpeta", "err");
+  }
+}
+
+function renderProjectResults(items) {
+  const results = document.getElementById("project-results");
+  results.innerHTML = "";
+  if (!items.length) {
+    results.innerHTML = `<div class="project-result"><small>No se encontraron proyectos Enki o ESP-IDF.</small></div>`;
+    return;
+  }
+  for (const item of items) {
+    const row = document.createElement("div");
+    row.className = "project-result";
+    const action = item.importable ? "Adoptar" : "Abrir";
+    const badge = item.kind === "enki" ? "Enki" : item.kind === "esp_idf" ? "ESP-IDF" : "Inválido";
+    row.innerHTML = `
+      <b>${escapeHtml(item.name)} <span class="badge">${escapeHtml(badge)}</span></b>
+      <small>${escapeHtml(item.absolute_path)}</small>
+      <button class="primary">${action}</button>
+    `;
+    row.querySelector("button").onclick = () => loadProjectFromPath(item.absolute_path, Boolean(item.importable));
+    results.appendChild(row);
+  }
+}
+
+async function refreshAll() {
+  await loadWorkspace();
+  await loadProjects();
+  setStatus("Refrescado", "ok");
+}
+
+async function loadStatus() {
+  if (!currentProject) return;
+  const s = await api(projectApi(currentProject, "/status"));
+  document.getElementById("status-card").innerHTML = `
+    <div><b>${escapeHtml(s.project)}</b></div>
+    <div>Target: ${escapeHtml(s.target)} · Lenguaje: ${escapeHtml(s.language)}</div>
+    <div>Template: ${escapeHtml(s.template)}</div>
+    <div>Puerto: ${escapeHtml(s.serial_port)} · Baudrate: ${s.baudrate}</div>
+    <div>Puerto activo: ${portStateLabel(s)}</div>
+    <div>IDF: ${s.idf_available ? '<span class="ok-text">disponible</span>' : '<span class="err-text">no disponible</span>'}</div>
+    <div class="muted">${escapeHtml(s.project_dir)}</div>
+  `;
+  await loadSettings();
+}
+
+async function loadSettings() {
+  if (!currentProject) return;
+  currentSettings = await api(projectApi(currentProject, "/settings"));
+  const cfg = currentSettings.config;
+  const sdk = currentSettings.sdkconfig_defaults;
+  document.getElementById("set-board-profile").value = cfg.board_profile || "generic_esp32";
+  document.getElementById("set-target").value = cfg.target || "esp32";
+  document.getElementById("set-port").value = cfg.serial_port || "auto";
+  document.getElementById("set-baudrate").value = cfg.baudrate || 115200;
+  document.getElementById("set-psram").checked = Boolean(sdk.psram);
+  document.getElementById("set-flash-size").value = sdk.flash_size || cfg.flash_size || "4MB";
+  document.getElementById("set-partition").value = sdk.partition_scheme || cfg.partition_scheme || "single_factory";
+  document.getElementById("set-log-level").value = sdk.log_level || cfg.log_level || "info";
+  renderFeatures();
+  updateProfileNote();
+}
+
+function applySelectedProfile() {
+  const profile = selectedProfile();
+  if (!profile) return;
+  document.getElementById("set-target").value = profile.target;
+  document.getElementById("set-psram").checked = Boolean(profile.psram);
+  document.getElementById("set-flash-size").value = profile.flash_size;
+  renderFeatures(profile);
+  updateProfileNote();
+}
+
+function selectedProfile() {
+  const id = document.getElementById("set-board-profile").value;
+  return boardMeta?.profiles?.find(item => item.id === id);
+}
+
+function updateProfileNote() {
+  const profile = selectedProfile();
+  document.getElementById("profile-note").textContent = profile?.notes || "";
+}
+
+function renderFeatures(profile = null) {
+  const cfg = currentSettings?.config || {};
+  const selected = profile || selectedProfile();
+  const supported = new Set(selected?.features || []);
+  const saved = cfg.features || {};
+  const list = document.getElementById("features-list");
+  if (!boardMeta?.features || !list) return;
+  list.innerHTML = "";
+  for (const feature of boardMeta.features) {
+    if (!supported.has(feature.id) && !["bluetooth_external"].includes(feature.id)) continue;
+    const row = document.createElement("label");
+    row.className = "feature-row";
+    const supportedNow = supported.has(feature.id);
+    const external = feature.kind === "external" || feature.kind === "integrated_needs_phy";
+    const radioStack = ["wifi_native", "bluetooth_native", "bluetooth_le_native"].includes(feature.id);
+    const configurable = supportedNow && !radioStack;
+    const defaultValue = feature.default === true && supportedNow;
+    const checked = Object.prototype.hasOwnProperty.call(saved, feature.id) ? Boolean(saved[feature.id]) : defaultValue;
+    const chip = !supportedNow ? "unsupported" : external ? "external" : "";
+    const chipText = !supportedNow ? "no nativo" : external ? "requiere HW" : feature.sdkconfig ? "sdkconfig" : "disponible";
+    row.innerHTML = `
+      <input type="checkbox" data-feature="${escapeHtml(feature.id)}" ${checked ? "checked" : ""} ${configurable || feature.id === "usb_serial_jtag" ? "" : "disabled"}>
+      <span><b>${escapeHtml(feature.name)}</b><small>${escapeHtml(feature.notes)}</small></span>
+      <span class="feature-chip ${chip}">${chipText}</span>
+    `;
+    list.appendChild(row);
+  }
+}
+
+async function saveSettings() {
+  if (!currentProject) return;
+  const payload = {
+    board_profile: document.getElementById("set-board-profile").value,
+    target: document.getElementById("set-target").value,
+    serial_port: document.getElementById("set-port").value,
+    baudrate: Number(document.getElementById("set-baudrate").value || 115200),
+    psram: document.getElementById("set-psram").checked,
+    flash_size: document.getElementById("set-flash-size").value,
+    partition_scheme: document.getElementById("set-partition").value,
+    log_level: document.getElementById("set-log-level").value,
+    features: collectFeatures(),
+  };
+  const result = await api(projectApi(currentProject, "/settings"), "PUT", payload);
+  document.getElementById("log").textContent = JSON.stringify(result, null, 2);
+  await loadStatus();
+  await refreshTree();
+  setStatus("Configuración aplicada", "ok");
+}
+
+function collectFeatures() {
+  const features = {};
+  document.querySelectorAll("[data-feature]").forEach(el => {
+    features[el.dataset.feature] = el.checked;
+  });
+  return features;
+}
+
+async function refreshTree() {
+  const list = document.getElementById("file-list");
+  list.innerHTML = "";
+  if (!currentProject) return;
+  await renderTree("", list, 0);
+}
+
+async function renderTree(dirPath, container, depth) {
+  const q = dirPath ? `?path=${encodeURIComponent(dirPath)}` : "";
+  const entries = await api(projectApi(currentProject, `/tree${q}`));
+  for (const entry of entries) {
+    if (entry.type === "dir") {
+      const row = document.createElement("div");
+      row.className = "item";
+      row.style.paddingLeft = `${10 + depth * 14}px`;
+      row.innerHTML = `<span class="dir-arrow">▶</span><span class="item-name">${escapeHtml(entry.name)}</span>`;
+      const children = document.createElement("div");
+      children.className = "children";
+      let loaded = false;
+      row.onclick = async () => {
+        if (!loaded) {
+          await renderTree(entry.path, children, depth + 1);
+          loaded = true;
+        }
+        children.classList.toggle("open");
+        row.querySelector(".dir-arrow").textContent = children.classList.contains("open") ? "▼" : "▶";
+      };
+      container.appendChild(row);
+      container.appendChild(children);
+    } else {
+      const row = document.createElement("div");
+      row.className = "item";
+      row.dataset.path = entry.path;
+      row.style.paddingLeft = `${10 + depth * 14}px`;
+      row.innerHTML = `<span>${iconFor(entry.name)}</span><span class="item-name">${escapeHtml(entry.name)}</span>`;
+      row.onclick = () => entry.editable ? openFile(entry.path) : setStatus("Archivo no editable en esta vista", "warn");
+      container.appendChild(row);
+    }
+  }
+}
+
+function iconFor(name) {
+  if (name === "app_config.json") return "{}";
+  if (name.endsWith(".c") || name.endsWith(".h")) return "C";
+  if (name.endsWith(".cpp") || name.endsWith(".hpp")) return "C++";
+  if (name.endsWith(".m")) return "M";
+  return "-";
+}
+
+async function openFile(path) {
+  if (dirty) await saveNow(true);
+  currentFile = path;
+  const data = await api(projectApi(currentProject, `/files/${encodeURIComponent(path)}`));
+  const model = monaco.editor.createModel(data.content, languageFor(path));
+  suppressChange = true;
+  editor.setModel(model);
+  suppressChange = false;
+  dirty = false;
+  document.getElementById("tab").textContent = path;
+  highlightActive();
+  setSaveState("Sin cambios");
+  setStatus(`Abierto: ${path}`, "ok");
+}
+
+function highlightActive() {
+  document.querySelectorAll(".item[data-path]").forEach(el => {
+    el.classList.toggle("active", el.dataset.path === currentFile);
+  });
+}
+
+async function saveNow(quiet = false) {
+  if (!currentProject || !currentFile || !editor) return;
+  clearTimeout(saveTimer);
+  await api(projectApi(currentProject, `/files/${encodeURIComponent(currentFile)}`), "PUT", {
+    content: editor.getValue()
+  });
+  dirty = false;
+  setSaveState(`Guardado ${new Date().toLocaleTimeString()}`);
+  if (!quiet) setStatus("Guardado", "ok");
+}
+
+async function saveAs() {
+  if (!currentProject || !editor) return;
+  const suggested = currentFile ? currentFile.replace(/(\.[^/.]+)?$/, "_copy$1") : "nuevo.c";
+  const target = prompt("Guardar como ruta dentro del proyecto:", suggested);
+  if (!target?.trim()) return;
+  try {
+    const result = await api(projectApi(currentProject, "/save-as"), "POST", {
+      target_path: target.trim(),
+      content: editor.getValue(),
+      overwrite: false
+    });
+    await refreshTree();
+    await openFile(result.path);
+    setStatus(`Guardado como ${result.path}`, "ok");
+  } catch (error) {
+    if (String(error.message).includes("409") && confirm("El archivo existe. ¿Sobrescribir?")) {
+      const result = await api(projectApi(currentProject, "/save-as"), "POST", {
+        target_path: target.trim(),
+        content: editor.getValue(),
+        overwrite: true
+      });
+      await refreshTree();
+      await openFile(result.path);
+      setStatus(`Sobrescrito ${result.path}`, "ok");
+    } else {
+      setStatus("No se pudo guardar como", "err");
+    }
+  }
+}
+
+async function runCommand(command) {
+  if (!currentProject) return;
+  await saveNow(true);
+  const actionBtns = ["build-btn", "flash-btn", "clean-btn"].map(id => document.getElementById(id)).filter(Boolean);
+  actionBtns.forEach(btn => { btn.disabled = true; });
+  setStatus(`Ejecutando ${command}...`, "warn");
+  document.getElementById("log").textContent = "";
+  try {
+    const body = {};
+    if (command === "flash") {
+      body.port = document.getElementById("set-port").value || "auto";
+    }
+    const result = await api(projectApi(currentProject, `/command/${command}`), "POST", body);
+    let logText = JSON.stringify(result, null, 2);
+    if (result.log_file) logText += `\n\nLog: ${result.log_file}`;
+    document.getElementById("log").textContent = logText;
+    setStatus(result.ok ? `${command} OK` : `${command} falló`, result.ok ? "ok" : "err");
+  } catch (error) {
+    document.getElementById("log").textContent = error.message;
+    setStatus(`${command} falló`, "err");
+  } finally {
+    actionBtns.forEach(btn => { btn.disabled = false; });
+  }
+}
+
+function terminalLine(text, kind = "") {
+  const output = document.getElementById("terminal-output");
+  const prefix = kind ? `[${kind}] ` : "";
+  output.textContent += prefix + text;
+  if (!text.endsWith("\n")) output.textContent += "\n";
+  output.scrollTop = output.scrollHeight;
+}
+
+function connectTerminal() {
+  disconnectTerminal();
+  const port = document.getElementById("set-port").value || "auto";
+  const baudrate = Number(document.getElementById("set-baudrate").value || 115200);
+  terminalWs = new WebSocket(`ws://${location.host}/ws/serial?port=${encodeURIComponent(port)}&baudrate=${baudrate}`);
+  document.getElementById("terminal-state").textContent = "conectando...";
+  terminalWs.onopen = () => {
+    document.getElementById("terminal-state").textContent = `${port} @ ${baudrate}`;
+  };
+  terminalWs.onmessage = event => {
+    try {
+      const msg = JSON.parse(event.data);
+      if (msg.type === "open") {
+        terminalLine(`Conectado a ${msg.port} @ ${msg.baudrate}\n`, "ok");
+        if (msg.port_resolution?.message) terminalLine(`${msg.port_resolution.message}\n`, "warn");
+      }
+      if (msg.type === "data") terminalLine(msg.text);
+      if (msg.type === "error") terminalLine(`${msg.message}\n`, "error");
+    } catch (_) {
+      terminalLine(event.data);
+    }
+  };
+  terminalWs.onerror = () => terminalLine("Error de conexión serial\n", "error");
+  terminalWs.onclose = () => {
+    document.getElementById("terminal-state").textContent = "desconectado";
+  };
+}
+
+function disconnectTerminal() {
+  if (!terminalWs) return;
+  try { terminalWs.send(JSON.stringify({ type: "close" })); } catch (_) {}
+  try { terminalWs.close(); } catch (_) {}
+  terminalWs = null;
+  document.getElementById("terminal-state").textContent = "desconectado";
+}
+
+function sendTerminal() {
+  const input = document.getElementById("terminal-input");
+  const text = input.value.trimEnd();
+  if (!text) return;
+  if (text.trim() === "/help") {
+    terminalLine(TERMINAL_HELP_TEXT + "\n", "help");
+    input.value = "";
+    return;
+  }
+  if (!terminalWs || terminalWs.readyState !== WebSocket.OPEN) {
+    terminalLine("Conecta la terminal antes de enviar datos.\n", "error");
+    return;
+  }
+  terminalWs.send(JSON.stringify({ type: "send", text }));
+  terminalLine(text + "\n", "tx");
+  input.value = "";
+}
+
+function clearTerminal() {
+  document.getElementById("terminal-output").textContent = "";
+}
+
+function showTerminalHelp() {
+  document.getElementById("terminal-help").classList.add("open");
+}
+
+function hideTerminalHelp() {
+  document.getElementById("terminal-help").classList.remove("open");
+}
+
+async function loadDoctor() {
+  const data = await api("/api/doctor");
+  document.getElementById("log").textContent = JSON.stringify(data, null, 2);
+  setStatus(data.ok ? "Doctor OK" : "Doctor con avisos", data.ok ? "ok" : "warn");
+}
+
+async function loadBoards(quiet = false) {
+  const data = await api("/api/boards");
+  const portSelect = document.getElementById("set-port");
+  const previous = portSelect.value || "auto";
+  const items = [{ value: "auto", label: "auto" }];
+  for (const port of data.ports) {
+    const label = `${port.device}${port.preferred ? " · recomendado" : ""}`;
+    items.push({ value: port.device, label });
+  }
+  fillSelect("set-port", items);
+  portSelect.value = items.some(item => item.value === previous) ? previous : "auto";
+  document.getElementById("log").textContent = JSON.stringify(data, null, 2);
+  if (!quiet) setStatus(`${data.count} puertos detectados`, "ok");
+}
+
+function setStatus(message, type = "ok") {
+  document.getElementById("status").textContent = message;
+  document.getElementById("statusbar").className = type;
+}
+
+function setSaveState(message) {
+  document.getElementById("save-state").textContent = message;
+}
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, ch => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;",
+  }[ch]));
+}
+
+/* ── Camera streaming ── */
+let cameraWs        = null;
+let cameraFrameCount = 0;
+let cameraLastTime   = 0;
+let cameraFps        = 0;       // client-side FPS (exponential average)
+let cameraErrorShown = false;
+// Board-side metrics parsed from ENKIMETRIC lines
+let boardFps         = 0;
+let boardTotal       = 0;
+let boardValid       = 0;
+
+function switchRightTab(tabId) {
+  const content = document.getElementById("right-panel-content");
+  const activeBtn = document.querySelector(".rtab-btn.active");
+  if (activeBtn && activeBtn.dataset.tab === tabId) {
+    content.classList.toggle("collapsed");
+    return;
+  }
+  document.querySelectorAll(".rtab-pane").forEach(p => p.classList.remove("active"));
+  document.querySelectorAll(".rtab-btn").forEach(b => b.classList.remove("active"));
+  document.getElementById(tabId).classList.add("active");
+  document.querySelector(`.rtab-btn[data-tab="${tabId}"]`).classList.add("active");
+  content.classList.remove("collapsed");
+}
+
+function toggleCamera() {
+  if (cameraWs && cameraWs.readyState !== WebSocket.CLOSED) {
+    cameraWs.close();
+  } else {
+    startCamera();
+  }
+}
+
+function startCamera() {
+  // If the serial terminal is connected, close it first — the port can't be
+  // shared between two readers simultaneously.
+  if (terminalWs && terminalWs.readyState === WebSocket.OPEN) {
+    terminalWs.close();
+    terminalWs = null;
+    document.getElementById("terminal-state").textContent = "desconectado (cámara activa)";
+  }
+
+  switchRightTab("tab-pane-camara");
+  document.body.classList.add("stream-mode");
+
+  const port     = document.getElementById("set-port").value || "auto";
+  const baudrate = Number(document.getElementById("set-baudrate").value || 115200);
+  const wsUrl    = `ws://${location.host}/ws/camera?port=${encodeURIComponent(port)}&baudrate=${baudrate}`;
+  cameraWs       = new WebSocket(wsUrl);
+  cameraErrorShown = false;
+
+  document.getElementById("camera-state").textContent = "conectando...";
+  document.getElementById("cam-btn").textContent = "Desconectar";
+
+  cameraWs.onmessage = (evt) => {
+    try {
+      const msg = JSON.parse(evt.data);
+      if (msg.type === "open") {
+        document.getElementById("camera-state").textContent = msg.port;
+      } else if (msg.type === "frame") {
+        renderCameraFrame(msg.data);
+      } else if (msg.type === "metric") {
+        handleBoardMetric(msg.line);
+      } else if (msg.type === "error") {
+        cameraErrorShown = true;
+        document.getElementById("camera-state").textContent = "✗ " + msg.message;
+      }
+    } catch (_) {}
+  };
+
+  cameraWs.onclose = () => {
+    document.body.classList.remove("stream-mode");
+    if (!cameraErrorShown) {
+      document.getElementById("camera-state").textContent = "desconectado";
+    }
+    document.getElementById("cam-btn").textContent = "Conectar";
+    document.getElementById("camera-overlay").classList.remove("visible");
+    cameraWs = null;
+  };
+
+  cameraWs.onerror = () => {
+    cameraErrorShown = true;
+    document.getElementById("camera-state").textContent = "✗ error WebSocket";
+  };
+}
+
+function handleBoardMetric(line) {
+  // Parse ENKIMETRIC:total=N:valid=V:rx=R:fps=F:ms=T
+  const kv = {};
+  line.replace(/^ENKIMETRIC:|^ENKISTAT:/, "").split(":").forEach(part => {
+    const eq = part.indexOf("=");
+    if (eq > 0) kv[part.slice(0, eq)] = part.slice(eq + 1);
+  });
+  if (kv.fps !== undefined) boardFps   = parseFloat(kv.fps) || 0;
+  if (kv.total !== undefined) boardTotal = parseInt(kv.total) || 0;
+  if (kv.valid !== undefined) boardValid = parseInt(kv.valid) || 0;
+
+  // Update the bottom stats bar with board-side data
+  const stats = document.getElementById("camera-stats");
+  if (stats && boardTotal > 0) {
+    stats.textContent =
+      `board ${boardFps.toFixed(1)} fps · total ${boardTotal} · valid ${boardValid}` +
+      (kv.ms !== undefined ? ` · ${kv.ms} ms/frame` : "");
+  }
+}
+
+function renderCameraFrame(b64) {
+  const now = performance.now();
+  cameraFrameCount++;
+  if (cameraLastTime > 0) {
+    const dt = now - cameraLastTime;
+    cameraFps = 0.85 * cameraFps + 0.15 * (1000 / dt);
+  }
+  cameraLastTime = now;
+
+  const img = new Image();
+  img.onload = () => {
+    const canvas  = document.getElementById("camera-canvas");
+    const waiting = document.getElementById("camera-waiting");
+    const overlay = document.getElementById("camera-overlay");
+
+    if (canvas.width  !== img.naturalWidth)  canvas.width  = img.naturalWidth;
+    if (canvas.height !== img.naturalHeight) canvas.height = img.naturalHeight;
+    canvas.getContext("2d").drawImage(img, 0, 0);
+
+    if (waiting.style.display !== "none") waiting.style.display = "none";
+    if (canvas.style.display   === "none") canvas.style.display = "";
+
+    // Overlay: client fps + resolution (board fps is in the stats bar below)
+    overlay.textContent =
+      `${img.naturalWidth}×${img.naturalHeight} · ${cameraFps.toFixed(1)} fps · frame #${cameraFrameCount}`;
+    overlay.classList.add("visible");
+  };
+  img.src = "data:image/jpeg;base64," + b64;
+}
+
+function clearCameraView() {
+  const canvas = document.getElementById("camera-canvas");
+  if (canvas.width && canvas.height) {
+    canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+  }
+  canvas.style.display = "none";
+  document.getElementById("camera-waiting").style.display = "";
+  document.getElementById("camera-overlay").classList.remove("visible");
+  document.getElementById("camera-stats").textContent = "";
+  document.body.classList.remove("stream-mode");
+  cameraFrameCount = 0;
+  cameraLastTime   = 0;
+  cameraFps        = 0;
+  boardFps         = 0;
+  boardTotal       = 0;
+  boardValid       = 0;
+}
+
+function portStateLabel(status) {
+  if (status.serial_port === "auto") {
+    return status.resolved_auto_port
+      ? `<span class="ok-text">${escapeHtml(status.resolved_auto_port)}</span>`
+      : '<span class="err-text">sin puerto USB detectado</span>';
+  }
+  return status.serial_port_available
+    ? '<span class="ok-text">presente</span>'
+    : `<span class="err-text">no presente</span>${status.resolved_auto_port ? ` · auto: ${escapeHtml(status.resolved_auto_port)}` : ""}`;
+}
+</script>
+</body>
+</html>

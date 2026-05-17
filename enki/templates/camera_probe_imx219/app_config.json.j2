@@ -1,0 +1,20 @@
+{
+  "project": "{{ project }}",
+  "target": "{{ target }}",
+  "language": "{{ language }}",
+  "framework": "esp-idf",
+  "rtos": "freertos",
+  "serial_port": "auto",
+  "baudrate": 115200,
+  "template": "{{ template }}",
+  "entry": "{{ entry }}",
+  "board_profile": "esp32p4_nano_32r16f",
+  "psram": true,
+  "flash_size": "16MB",
+  "partition_scheme": "single_factory",
+  "log_level": "info",
+  "features": {
+    "usb_serial_jtag": true,
+    "camera_mipi": true
+  }
+}
