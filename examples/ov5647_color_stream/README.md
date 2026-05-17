@@ -290,4 +290,4 @@ REQUIRES esp_hw_support esp_driver_cam sensor_init esp_driver_jpeg
 
 ## License
 
-MIT — feel free to use, adapt, and share.
+Apache License 2.0 — see [LICENSE](../../LICENSE) for details.
