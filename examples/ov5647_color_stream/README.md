@@ -43,40 +43,54 @@ OV5647 RAW8 (MIPI CSI-2, 2 lanes)
 
 ---
 
-## Prerequisites
-
-- ESP-IDF **v6.1** with ESP32-P4 target support
-- Python 3.10+ with `pyserial` and `websockets`
-- Waveshare ESP32-P4 Nano board with OV5647 camera module
+## Quick Start
 
 ```bash
-pip install pyserial websockets
+git clone https://github.com/efloresaraya/esp32p4-ov5647-color-stream.git
+cd esp32p4-ov5647-color-stream
+chmod +x setup.sh && ./setup.sh
 ```
+
+`setup.sh` installs ESP-IDF v6.1, the Enki web UI and all Python dependencies automatically.
+
+Start every new terminal session with:
+
+```bash
+source .venv/bin/activate
+source esp-idf/export.sh
+```
+
+---
+
+## Prerequisites
+
+- Waveshare ESP32-P4 Nano board with OV5647 camera module
+- macOS or Linux
+- Python 3.9+ — [python.org](https://www.python.org/downloads/)
+- Git
+
+Everything else (ESP-IDF, toolchains, Python packages) is installed by `setup.sh`.
 
 ---
 
 ## Build & Flash
 
 ```bash
-cd enki_ESP32
-source esp-idf/export.sh
-
-cd camera_sensor_stack_probe_RGB
+# Inside the cloned directory, after running setup.sh and activating the session:
 idf.py build
 idf.py -p /dev/cu.usbmodemXXXX flash
 ```
 
-Replace `/dev/cu.usbmodemXXXX` with your actual USB JTAG port.
+Replace `/dev/cu.usbmodemXXXX` with your actual USB JTAG port (`ls /dev/cu.usbmodem*`).
 
 ---
 
 ## Viewing the Stream
 
-### Option A — Enki Web UI
+### Option A — Enki Web UI (installed by setup.sh)
 
 ```bash
-cd enki_ESP32
-python3 -m enki.cli ui        # opens at http://127.0.0.1:8765
+enki ui
 open http://127.0.0.1:8765
 ```
 

@@ -18,37 +18,41 @@ enki flash
 enki monitor
 ```
 
+## Quick Start
+
+```bash
+git clone https://github.com/efloresaraya/enki-esp32.git
+cd enki-esp32
+chmod +x setup.sh && ./setup.sh
+```
+
+`setup.sh` installs Enki into a local `.venv` and, if ESP-IDF is not already present, clones and installs **ESP-IDF v6.1** with the ESP32-P4 toolchain (downloads ~1–2 GB).
+
+Start every new terminal session with:
+
+```bash
+source .venv/bin/activate
+source esp-idf/export.sh
+```
+
+Then verify the environment:
+
+```bash
+enki doctor
+```
+
 ## Requirements
 
-- macOS recommended for v1.
-- Python 3.11 or newer.
-- ESP-IDF installed and activated when building/flashing.
-- `idf.py` available through `IDF_PATH` or `PATH`.
-- CMake, Ninja and the ESP-IDF toolchain from your ESP-IDF installation.
-
-Enki does not install ESP-IDF automatically in v1.
-If ESP-IDF lives inside this repository as `esp-idf/`, Enki can detect it, but you should still run `. ./esp-idf/export.sh` in the shell before `enki build`, `enki flash` or `enki run`.
-
-## Installation
-
-```bash
-python3.11 -m venv .venv
-source .venv/bin/activate
-pip install -e .
-```
-
-The main command is:
-
-```bash
-enki
-```
+- macOS (recommended for v1)
+- Python 3.9 or newer — [python.org](https://www.python.org/downloads/)
+- Git
+- ESP-IDF v6.1 — installed automatically by `setup.sh`, or manually from [docs.espressif.com](https://docs.espressif.com/projects/esp-idf/en/v6.1/esp32p4/get-started/index.html)
 
 ## Basic Usage
 
 Check your environment:
 
 ```bash
-. ./esp-idf/export.sh
 enki doctor
 enki doctor --json
 ```
